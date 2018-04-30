@@ -10,3 +10,9 @@
 ##### .....<br>
 ### screen shot (klayout)  <br>
 ### ![Image](https://github.com/BHa2R00/vrom_compiler/blob/master/2018-04-30%2021-29-19screenshot.png)
+### How to use
+#### first, you need a 'PDK' and 'leaf cell'
+#### second, you need 'ecl' and 'make'
+#### then,edit 'vrom_compile.lisp' and 'config.lisp'
+#### make
+#### ./vrom_compile
