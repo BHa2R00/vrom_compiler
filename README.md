@@ -8,3 +8,6 @@
 ##### 000000001 101000101<br>
 ##### 000000010 100101010<br>
 ##### .....<br>
+<br>
+###screen shot <br>
+![image](https://github.com/BHa2R00/vrom_compiler/blob/master/2018-04-30%2021-29-19screenshot.png)
