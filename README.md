@@ -8,9 +8,9 @@
 ##### 000000001 101000101<br>
 ##### 000000010 100101010<br>
 ##### .....<br>
-### screen shot (klayout)  <br>
+### screen shot (view in klayout)  <br>
 ### ![Image](https://github.com/BHa2R00/vrom_compiler/blob/master/2018-04-30%2021-29-19screenshot.png)
-### screen shot (calibredrv) <br>
+### screen shot (view in calibredrv) <br>
 ### ![Image](https://github.com/BHa2R00/vrom_compiler/blob/master/2018-04-30%2022-10-56screenshot.png)
 ### How to use
 #### first, you need 'leaf cell' and the corresponding PDK
