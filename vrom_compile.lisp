@@ -1669,8 +1669,12 @@ compiler start
 (print "macro")
 (let ((i0) (i1) (i2) (i3) (i4) (i5) (i6) (p0 (vector 0 0)))
   (setf i0 (inst (vector "dio_ymuxcol_left" #x0000 0.0d0 p0
-						 (list "GND" "VDD" "DO[0]" "DO[1]" "DO[2]" "DO[3]" "DO[4]" "DO[5]" "DO[6]" "DO[7]" "DO[8]" "DO[9]")
-						 (list "GND" "VDD" "DO[0]" "DO[1]" "DO[2]" "DO[3]" "DO[4]" "DO[5]" "DO[6]" "DO[7]" "DO[8]" "DO[9]"))))
+						 (list "GND" "VDD" "DO[0]" "DO[1]" "DO[2]" "DO[3]" "DO[4]" "DO[5]" "DO[6]" "DO[7]" "DO[8]" "DO[9]"
+							   "DO[10]" "DO[11]" "DO[12]" "DO[13]" "DO[14]" "DO[15]" "DO[16]" "DO[17]" "DO[18]" "DO[19]"
+							   "DO[20]" "DO[21]" "DO[22]" "DO[23]" "DO[24]" "DO[25]" "DO[26]" "DO[27]" "DO[28]" "DO[29]")
+						 (list "GND" "VDD" "DO[0]" "DO[1]" "DO[2]" "DO[3]" "DO[4]" "DO[5]" "DO[6]" "DO[7]" "DO[8]" "DO[9]"
+							   "DO[10]" "DO[11]" "DO[12]" "DO[13]" "DO[14]" "DO[15]" "DO[16]" "DO[17]" "DO[18]" "DO[19]"
+							   "DO[20]" "DO[21]" "DO[22]" "DO[23]" "DO[24]" "DO[25]" "DO[26]" "DO[27]" "DO[28]" "DO[29]"))))
   (setf i1 (inst-up-right i0 (vector "core_left" #x0000 0.0d0 p0
 						 (list "GND")
 						 (list "GND"))))
@@ -1685,8 +1689,12 @@ compiler start
 						 (list "GND" "VDD")
 						 (list "GND" "VDD"))))
   (setf i4 (inst-right-down i2 (vector "dio_ymuxcol_right" #x0000 0.0d0 p0
-						 (list "GND" "VDD" "DO[0]" "DO[1]" "DO[2]" "DO[3]" "DO[4]" "DO[5]" "DO[6]" "DO[7]" "DO[8]" "DO[9]")
-						 (list "GND" "VDD" "DO[0]" "DO[1]" "DO[2]" "DO[3]" "DO[4]" "DO[5]" "DO[6]" "DO[7]" "DO[8]" "DO[9]"))))
+						 (list "GND" "VDD" "DO[0]" "DO[1]" "DO[2]" "DO[3]" "DO[4]" "DO[5]" "DO[6]" "DO[7]" "DO[8]" "DO[9]"
+							   "DO[10]" "DO[11]" "DO[12]" "DO[13]" "DO[14]" "DO[15]" "DO[16]" "DO[17]" "DO[18]" "DO[19]"
+							   "DO[20]" "DO[21]" "DO[22]" "DO[23]" "DO[24]" "DO[25]" "DO[26]" "DO[27]" "DO[28]" "DO[29]")
+						 (list "GND" "VDD" "DO[0]" "DO[1]" "DO[2]" "DO[3]" "DO[4]" "DO[5]" "DO[6]" "DO[7]" "DO[8]" "DO[9]"
+							   "DO[10]" "DO[11]" "DO[12]" "DO[13]" "DO[14]" "DO[15]" "DO[16]" "DO[17]" "DO[18]" "DO[19]"
+							   "DO[20]" "DO[21]" "DO[22]" "DO[23]" "DO[24]" "DO[25]" "DO[26]" "DO[27]" "DO[28]" "DO[29]"))))
   (setf i5 (inst-up-left i4 (vector "core_right" #x0000 0.0d0 p0
 						 (list "GND")
 						 (list "GND"))))
