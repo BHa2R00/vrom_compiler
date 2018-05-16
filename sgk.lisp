@@ -1,3 +1,8 @@
+(declaim (optimize (speed 3)
+				   (compilation-speed 0)
+				   (safety 0)
+				   (debug 0)))
+
 (defvar *RT_BGNLIB*			#x0102)
 (defvar *RT_HEADER*			#x0002)
 (defvar *RT_LIBNAME*		#x0206)
@@ -1062,9 +1067,17 @@
   (concatenate 'list (list strname) (get-snames (get-cell *srcunits* strname)))))
 
 (defun withdraw (name)
-  (let ((outunits) (names (concatenate 'list (list name) (depend-2 name))))
+  (let ((outunits) (names (concatenate 'list (list name) (depend-2 name))) (cnt 0))
+	(format t "withdraw depends")
 	(dolist (name1 names)
-	  (push (if (in-units-p outunits name1) nil (get-cell *srcunits* name1)) outunits))
+;	  (if (= (div1 cnt 3000) 1)
+;		(if (in-units-p outunits name1)
+;		  (format t ".")
+;		  nil)
+;		nil)
+	  (push (if (in-units-p outunits name1) nil (get-cell *srcunits* name1)) outunits)
+	  (incf cnt))
+	(format t "~%")
 	outunits))
 
 (defun sref-sname (sref)
@@ -1546,4 +1559,3 @@
 
 ;(defun overlay-2 (sname strans angle cellname stri stri0)
 ;  (push (overlay-1 sname strans angle (get-cell *srcunits* cellname) stri stri0) (cdddr (get-cell *srcunits* cellname))))
-

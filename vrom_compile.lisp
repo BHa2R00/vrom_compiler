@@ -1,7 +1,15 @@
-(load "./config.lisp")
-(load "./sgk.fas")
+(load "./sgk.fasl")
 
-(defvar srclib (sgk-rd-gds *leaf_cell*))
+(declaim (optimize (speed 3)
+				   (compilation-speed 0)
+				   (safety 0)
+				   (debug 0)))
+
+(defun vrom-compile (&key leaf_cell code-file word-depth word-length col-mux charmode hpinlayer vpinlayer anchor_layer_number outlib-name top-name gds-out)
+
+(setf *anchor_layer_number* anchor_layer_number)
+
+(defvar srclib (sgk-rd-gds leaf_cell))
 
 (defun xaddrs (wd cm)
   (let (wddp)
@@ -91,14 +99,14 @@
 
 ;(sgk-ls-cell srclib)
 
-(defvar *xaddrs* (floor (xaddrs *word-depth* *col-mux*)))
-(defvar *yaddrs* (floor (yaddrs *col-mux*)))
+(defvar *xaddrs* (floor (xaddrs word-depth col-mux)))
+(defvar *yaddrs* (floor (yaddrs col-mux)))
 (defvar *ymuxx* (floor (ymuxx *yaddrs*)))
 (defvar *ymuxsa2* (ymuxsa2 *yaddrs*))
 (defvar *ymuxsa1left* (ymuxsa1left *yaddrs*))
 (defvar *ymuxsa1right* (ymuxsa1right *yaddrs*))
 (defvar *ypredeccell* (ypredeccell *yaddrs*))
-(defvar *itfctlcell* (itfctlcell *yaddrs* *charmode*))
+(defvar *itfctlcell* (itfctlcell *yaddrs* charmode))
 (defvar *dmy_colmux_odd* (dmy_colmux_odd *yaddrs*))
 (defvar *dmy_colmux_even* (dmy_colmux_even *yaddrs*))
 (defvar *dmy_tkwl_corner_even* "DMY_TKWL_CORNER_W")
@@ -107,39 +115,39 @@
 (defvar *dmy_wl_edgex4_odd* "DMY_WL_EDGEX4")
 (defvar *dmy_wl_corner_even* "DMY_WL_CORNER_W")
 (defvar *dmy_wl_corner_odd* "DMY_WL_CORNER")
-(defvar *xpredec38* (xpredec38 *col-mux*))
-(defvar *xdec_ydec_con* (xdec_ydec_con *col-mux*))
-(defvar *col_dec_con* (col_dec_con *col-mux* *charmode*))
-(defvar *wl_tie* (wl_tie *col-mux*))
-(defvar *Xpredechigh* (Xpredechigh *col-mux*))
-(defvar *Xpredecmid* (Xpredechigh *col-mux*))
-(defvar *Xpredeclow* (Xpredechigh *col-mux*))
-(defvar *Xaddrslow* (aref *xaddrsnh* (- *yaddrs* 3) 0))
-(defvar *Xaddrsmid* (aref *xaddrsnh* (- *yaddrs* 3) 1))
-(defvar *Xaddrshigh* (aref *xaddrsnh* (- *yaddrs* 3) 2))
-(defvar *mun-of-addr* (floor (math-log 2 *word-depth*)))
+(defvar *xpredec38* (xpredec38 col-mux))
+(defvar *xdec_ydec_con* (xdec_ydec_con col-mux))
+(defvar *col_dec_con* (col_dec_con col-mux charmode))
+(defvar *wl_tie* (wl_tie col-mux))
+(defvar *Xpredechigh* (Xpredechigh col-mux))
+(defvar *Xpredecmid* (Xpredechigh col-mux))
+(defvar *Xpredeclow* (Xpredechigh col-mux))
+(defvar *Xaddrslow* (aref *xaddrsnh* (- *xaddrs* 3) 0))
+(defvar *Xaddrsmid* (aref *xaddrsnh* (- *xaddrs* 3) 1))
+(defvar *Xaddrshigh* (aref *xaddrsnh* (- *xaddrs* 3) 2))
+(defvar *mun-of-addr* (floor (math-log 2 word-depth)))
 (defvar *col-per-sa* (floor (math-pow 2 *yaddrs*)))
-(defvar *num-of-xdecs* (num-of-xdecs *word-depth* *col-per-sa*))
-(defvar *outputs-left* (/ (1+ *word-length*) 2))
-(defvar *outputs-right* (/ *word-length* 2))
+(defvar *num-of-xdecs* (num-of-xdecs word-depth *col-per-sa*))
+(defvar *outputs-left* (/ (1+ word-length) 2))
+(defvar *outputs-right* (/ word-length 2))
 (defvar *number-of-cols-l* (floor *outputs-left*))
 (defvar *number-of-cols-r* (floor *outputs-right*))
 (defvar *number-of-cols* (+ *number-of-cols-l* *number-of-cols-r*))
-(defvar *compiler-args-check* (if(= (mod (- (math-pow 2 *mun-of-addr*) *word-depth*) (* 8 (math-pow 2 *yaddrs*))) 0) "ArgvOK ^_^" "InValidArgv X_X"))
+(defvar *compiler-args-check* (if(= (mod (- (math-pow 2 *mun-of-addr*) word-depth) (* 8 (math-pow 2 *yaddrs*))) 0) "ArgvOK ^_^" "InValidArgv X_X"))
 
 (if (string/= *compiler-args-check* "ArgvOK ^_^") (format t "~a~%" *compiler-args-check*) (progn
 
 (defun code (fi)
-  (let ((code-map (make-array (list *word-depth* *word-length*))) (line))
+  (let ((code-map (make-array (list word-depth word-length))) (line))
 	(with-open-file (str-cod fi :direction	:input)
-	  (dotimes (n *word-depth*)
+	  (dotimes (n word-depth)
 		(setf line (read-line str-cod nil 'eof))
-		(setf line (subseq line (- (length line) *word-length*)))
-		(dotimes (m *word-length*)
+		(setf line (subseq line (- (length line) word-length)))
+		(dotimes (m word-length)
 		  (setf (aref code-map n m) (aref line m)))))
 	code-map))
 
-(defvar *code-map* (code *code-file*))
+(defvar *code-map* (code code-file))
 
 (defvar *units* (list))
 
@@ -168,8 +176,8 @@ CompilerArgvCheck: ~a
 compiler start
 
 "
-		*code-file*
-		*word-depth* *word-length* *col-mux* *charmode*
+		code-file
+		word-depth word-length col-mux charmode
 		*xaddrs* *yaddrs* *ymuxx*
 		*ymuxsa2* *ymuxsa1left* *ymuxsa1right*
 		*ypredeccell*
@@ -215,7 +223,7 @@ compiler start
 
 ;;;;;;;;wl_edge_LL_col
 (print "wl_edge_LL_col")
-(let ((s0) (GND_ (concatenate 'string "GND_" *hpinlayer*)))
+(let ((s0) (GND_ (concatenate 'string "GND_" hpinlayer)))
   (setf s0 (vector "wl_edge_array" #x0000 0.0d0 (vector 0 0)
 				   (list GND_  "WL0" "WL3")
 				   (list "GND" "AC_WL0_2" "AC_WL1_2")))
@@ -223,7 +231,7 @@ compiler start
 
 ;;;;;;;;wl_edge_RR_col
 (print "wl_edge_RR_col")
-(let ((insts (list)) (p0 (vector 0 0)) (i0) (GND_ (concatenate 'string "GND_" *hpinlayer*)))
+(let ((insts (list)) (p0 (vector 0 0)) (i0) (GND_ (concatenate 'string "GND_" hpinlayer)))
   (dotimes (dimx (* 2 *num-of-xdecs*))
 	(if (evenp *number-of-cols-r*)
 	  (progn
@@ -243,23 +251,23 @@ compiler start
 
 ;;;;;;;;tkwl_edge_LL
 (print "tkwl_edge_LL")
-(let ((i0) (p0 (vector 0 0)) (GND_ (concatenate 'string "GND_" *hpinlayer*)))
+(let ((i0) (p0 (vector 0 0)) (GND_ (concatenate 'string "GND_" hpinlayer)))
   (if (evenp *number-of-cols-l*)
 	(setf i0 (vector *dmy_tkwl_corner_even* #x0000 0.0d0 p0
 					 (list GND_
-						   (if (= 1 *charmode*) "MWL" nil))
+						   (if (= 1 charmode) "MWL" nil))
 					 (list "GND"
-						   (if (= 1 *charmode*) "AC_MWL_2" nil))))
+						   (if (= 1 charmode) "AC_MWL_2" nil))))
 	(setf i0 (vector *dmy_tkwl_corner_odd* #x0000 0.0d0 p0
 					 (list GND_
-						   (if (= 1 *charmode*) "MWL" nil))
+						   (if (= 1 charmode) "MWL" nil))
 					 (list "GND"
-						   (if (= 1 *charmode*) "AC_MWL_2" nil)))))
+						   (if (= 1 charmode) "AC_MWL_2" nil)))))
   (push (cell-3 "tkwl_edge_LL" (list (inst i0))) *srcunits*))
 
 ;;;;;;;;tkwl_edge_RR
 (print "tkwl_edge_RR")
-(let ((i0) (p0 (vector 0 0)) (GND_ (concatenate 'string "GND_" *hpinlayer*)))
+(let ((i0) (p0 (vector 0 0)) (GND_ (concatenate 'string "GND_" hpinlayer)))
   (if (evenp *number-of-cols-r*)
 	(setf i0 (vector *dmy_tkwl_corner_even* #x4000 0.0d0 p0
 					 (list GND_)
@@ -300,7 +308,7 @@ compiler start
 ;;;;;;;;core_tkwl_sub_1ymux
 (print "core_tkwl_sub_1ymux")
 (let ((insts (list)) (p0 (vector 0 0)) (i1))
-  (dotimes (dimy (div1 *col-mux* 8))
+  (dotimes (dimy (div1 col-mux 8))
 	(setf i1 (vector "CORE_TKWL_SUBX8" #x0000 0.0d0 p0
 					 (list "GND" "GND_m1" "GND_m2" "GND_m3" "GND_m4")
 					 (list "GND" "GND_m1" "GND_m2" "GND_m3" "GND_m4")))
@@ -311,8 +319,8 @@ compiler start
 ;;;;;;;;core_tkwl_sub_2ymux
 (print "core_tkwl_sub_2ymux")
 (let ((p0 (vector 0 0)) (s0) (s1) (s2)
-						(GND_ (concatenate 'string "GND_" *vpinlayer*))
-						(VDD_ (concatenate 'string "VDD_" *vpinlayer*)))
+						(GND_ (concatenate 'string "GND_" vpinlayer))
+						(VDD_ (concatenate 'string "VDD_" vpinlayer)))
   (setf s0 (inst (vector "core_tkwl_sub_1ymux" #x0000 0.0d0 p0
 						 (list GND_)
 						 (list "GND"))))
@@ -327,8 +335,8 @@ compiler start
 ;;;;;;;;tkwl_sub_L
 (print "tkwl_sub_L")
 (let ((insts (list)) (p0 (vector 0 0)) (i1)
-					 (GND_ (concatenate 'string "GND_" *vpinlayer*))
-					 (VDD_ (concatenate 'string "VDD_" *vpinlayer*)))
+					 (GND_ (concatenate 'string "GND_" vpinlayer))
+					 (VDD_ (concatenate 'string "VDD_" vpinlayer)))
   (dotimes (dimx (div1 *number-of-cols-l* 2))
 	(setf i1 (vector "core_tkwl_sub_2ymux" #x0000 0.0d0 p0
 					 (list "GND" GND_)
@@ -341,8 +349,8 @@ compiler start
 (print "tkwl_sub_left")
 (if (evenp *number-of-cols-l*)
 (let ((p0 (vector 0 0)) (s0) (s1)
-						(GND_ (concatenate 'string "GND_" *vpinlayer*))
-						(VDD_ (concatenate 'string "VDD_" *vpinlayer*)))
+						(GND_ (concatenate 'string "GND_" vpinlayer))
+						(VDD_ (concatenate 'string "VDD_" vpinlayer)))
   (setf s0 (inst (vector "tkwl_sub_L" #x0000 0.0d0 p0
 						 (list "GND" GND_)
 						 (list "GND" "GND"))))
@@ -352,8 +360,8 @@ compiler start
   (push (cell-3 "tkwl_sub_left" (list s0 s1)) *srcunits*))
 (if (= (div1 *number-of-cols-l* 2) 0)
 (let ((p0 (vector 0 0)) (s0) (s1)
-						(GND_ (concatenate 'string "GND_" *vpinlayer*))
-						(VDD_ (concatenate 'string "VDD_" *vpinlayer*)))
+						(GND_ (concatenate 'string "GND_" vpinlayer))
+						(VDD_ (concatenate 'string "VDD_" vpinlayer)))
   (setf s0 (inst (vector "core_tkwl_sub_1ymux" #x0000 0.0d0 p0
 						 (list "GND" GND_)
 						 (list "GND" "GND"))))
@@ -362,8 +370,8 @@ compiler start
 						 (list "GND" "GND" "VDD"))))
   (push (cell-3 "tkwl_sub_left" (list s0 s1)) *srcunits*))
 (let ((p0 (vector 0 0)) (s0) (s1) (s2)
-						(GND_ (concatenate 'string "GND_" *vpinlayer*))
-						(VDD_ (concatenate 'string "VDD_" *vpinlayer*)))
+						(GND_ (concatenate 'string "GND_" vpinlayer))
+						(VDD_ (concatenate 'string "VDD_" vpinlayer)))
   (setf s0 (inst (vector "tkwl_sub_L" #x0000 0.0d0 p0
 						 (list "GND")
 						 (list "GND"))))
@@ -378,8 +386,8 @@ compiler start
 ;;;;;;;;tkwl_sub_R
 (print "tkwl_sub_R")
 (let ((insts (list)) (p0 (vector 0 0)) (i1)
-					 (GND_ (concatenate 'string "GND_" *vpinlayer*))
-					 (VDD_ (concatenate 'string "VDD_" *vpinlayer*)))
+					 (GND_ (concatenate 'string "GND_" vpinlayer))
+					 (VDD_ (concatenate 'string "VDD_" vpinlayer)))
   (dotimes (dimx (div1 *number-of-cols-r* 2))
 	(setf i1 (vector "core_tkwl_sub_2ymux" #x0000 0.0d0 p0
 					 (list "GND" GND_ VDD_)
@@ -392,19 +400,19 @@ compiler start
 (print "tkwl_sub_right")
 (if (evenp *number-of-cols-r*)
 (let ((p0 (vector 0 0)) (s0) (s1)
-						(GND_ (concatenate 'string "GND_" *vpinlayer*))
-						(VDD_ (concatenate 'string "VDD_" *vpinlayer*)))
+						(GND_ (concatenate 'string "GND_" vpinlayer))
+						(VDD_ (concatenate 'string "VDD_" vpinlayer)))
   (setf s0 (inst (vector "tkwl_sub_R" #x0000 0.0d0 p0
 						 (list "GND" GND_)
 						 (list "GND" "GND"))))
-  (setf s1 (inst-right-down s0 (vector "CORE_TKWL_SUB" #x0000 0.0d0 p0
+  (setf s1 (inst-right-down s0 (vector "CORE_TKWL_SUB" #x4000 0.0d0 p0
 						 (list "GND")
 						 (list "GND"))))
   (push (cell-3 "tkwl_sub_right" (list s0 s1)) *srcunits*))
 (if (= (div1 *number-of-cols-r* 2) 0)
 (let ((p0 (vector 0 0)) (s0) (s1)
-						(GND_ (concatenate 'string "GND_" *vpinlayer*))
-						(VDD_ (concatenate 'string "VDD_" *vpinlayer*)))
+						(GND_ (concatenate 'string "GND_" vpinlayer))
+						(VDD_ (concatenate 'string "VDD_" vpinlayer)))
   (setf s0 (inst (vector "core_tkwl_sub_1ymux" #x0000 0.0d0 p0
 						 (list "GND" GND_)
 						 (list "GND" "GND"))))
@@ -413,8 +421,8 @@ compiler start
 						 (list "GND" "VDD"))))
   (push (cell-3 "tkwl_sub_right" (list s0 s1)) *srcunits*))
 (let ((p0 (vector 0 0)) (s0) (s1) (s2)
-						(GND_ (concatenate 'string "GND_" *vpinlayer*))
-						(VDD_ (concatenate 'string "VDD_" *vpinlayer*)))
+						(GND_ (concatenate 'string "GND_" vpinlayer))
+						(VDD_ (concatenate 'string "VDD_" vpinlayer)))
   (setf s0 (inst (vector "tkwl_sub_R" #x0000 0.0d0 p0
 						 (list "GND" GND_)
 						 (list "GND" "GND"))))
@@ -951,7 +959,7 @@ compiler start
 (defun array_bit (num)
 (print (concatenate 'string "array_bit_" (itoa num)))
 (let ((cellname (concatenate 'string "array_bit_" (itoa num)))
-	  (insts) (p0 (vector 0 0))
+	  (p0 (vector 0 0))
 	  (addr0) (addr1)
 	  (sname "CORE")
 	  (bv0) (bv1)
@@ -961,8 +969,8 @@ compiler start
 	(dotimes (dimy (floor (* 4 *num-of-xdecs*)))
 	  (setf addr0 (floor (+ dimx (* dimy 2 (math-pow 2 *yaddrs*)))))
 	  (setf addr1 (floor (+ dimx (* (1+ (* dimy 2)) (math-pow 2 *yaddrs*)))))
-	  (setf bv0 (aref *code-map* addr0 (- *word-length* 1 num)))
-	  (setf bv1 (aref *code-map* addr1 (- *word-length* 1 num)))
+	  (setf bv0 (aref *code-map* addr0 (- word-length 1 num)))
+	  (setf bv1 (aref *code-map* addr1 (- word-length 1 num)))
 	  (setf sname (concatenate 'string "CORE" (string bv1) (string bv0)))
 	  (if (evenp dimx)
 		(setf i1 (vector sname #x4000 0.0d0 p0 (list) (list)))
@@ -982,10 +990,29 @@ compiler start
 ;(print "array_bit_char2")
 
 ;;;;;;;;array_left
+(defun array_left_even ()
 (print "array_left")
 (let ((s0) (s1) (p0 (vector 0 0)) (insts (list)))
 (cond
-  ((= *charmode* 0)
+  ((= charmode 0)
+   (dotimes (dimx *number-of-cols-l*)
+	 (array_bit dimx)
+	 (setf s0 (vector (concatenate 'string "array_bit_" (itoa dimx)) #x0000 0.0d0 p0 (list) (list)))
+	 (push (inst s0) insts)
+	 (if (evenp dimx)
+	   (progn
+		 (setf s1 (vector "core_ref_array" #x0000 0.0d0 (vector+ p0 (vector (vinst-width s0) 0)) (list) (list)))
+		 (push (inst s1) insts))
+	   nil)
+	 (setf p0 (vector+ p0 (vector (if (evenp dimx)
+									(+ (vinst-width s0) (vinst-width s1)) (vinst-width s0)) 0))))))
+(push (cell-3 "array_left" insts) *srcunits*)))
+
+(defun array_left_odd ()
+(print "array_left")
+(let ((s0) (s1) (p0 (vector 0 0)) (insts (list)))
+(cond
+  ((= charmode 0)
    (dotimes (dimx *number-of-cols-l*)
 	 (array_bit dimx)
 	 (setf s0 (vector (concatenate 'string "array_bit_" (itoa dimx)) #x0000 0.0d0 p0 (list) (list)))
@@ -997,12 +1024,13 @@ compiler start
 	   nil)
 	 (setf p0 (vector+ p0 (vector (if (oddp dimx)
 									(+ (vinst-width s0) (vinst-width s1)) (vinst-width s0)) 0))))))
-(push (cell-3 "array_left" insts) *srcunits*))
+(push (cell-3 "array_left" insts) *srcunits*)))
 
 ;;;;;;;;core_left
 (print "core_left")
 (if (evenp *number-of-cols-l*)
   (let ((p0 (vector 0 0)) (s2) (s3) (s4) (s5) (s6))
+	(array_left_even)
 	(setf s2 (inst (vector "array_left" #x0000 0.0d0 p0 (list) (list))))
 	(setf s3 (inst-left-down s2 (vector "core_dummy_array" #x0000 0.0d0 p0 (list) (list))))
 	(setf s4 (inst-left-down s3 (vector "wl_edge_LL_col" #x0000 0.0d0 p0 (list "GND") (list "GND"))))
@@ -1010,6 +1038,7 @@ compiler start
 	(setf s6 (inst-down-left s4 (vector "bl_edge_left" #x0000 0.0d0 p0 (list) (list))))
 	(push (cell-3 "core_left" (list s2 s3 s4 s5 s6)) *srcunits*))
   (let ((p0 (vector 0 0)) (s2) (s3) (s4) (s5) (s6))
+	(array_left_odd)
 	(setf s2 (inst (vector "array_left" #x0000 0.0d0 p0 (list) (list))))
 	(setf s3 (inst-left-down s2 (vector "core_ref_array" #x0000 0.0d0 p0 (list) (list))))
 	(setf s4 (inst-left-down s3 (vector "wl_edge_LL_col" #x0000 0.0d0 p0 (list "GND") (list "GND"))))
@@ -1070,7 +1099,7 @@ compiler start
 (print "core_right")
 (if (evenp *number-of-cols-r*)
   (let ((s2) (s3) (s4) (s5) (s6) (p0 (vector 0 0)))
-	(case *charmode*
+	(case charmode
 	  (0 (array_right_1)))
 	(setf s2 (inst (vector "array_right" #x0000 0.0d0 p0 (list) (list))))
 	(setf s3 (inst-right-down s2 (vector "core_dummy_array" #x4000 0.0d0 p0 (list) (list))))
@@ -1079,7 +1108,7 @@ compiler start
 	(setf s6 (inst-down-right s4 (vector "bl_edge_right" #x0000 0.0d0 p0 (list) (list))))
 	(push (cell-3 "core_right" (list s2 s3 s4 s5 s6)) *srcunits*))
   (let ((s2) (s3) (s4) (s5) (p0 (vector 0 0)))
-	(case *charmode*
+	(case charmode
 	  (0 (array_right_2)))
 	(setf s2 (inst (vector "array_right" #x0000 0.0d0 p0 (list) (list))))
 	(setf s3 (inst-right-down s2 (vector "wl_edge_RR_col" #x0000 0.0d0 p0 (list "GND") (list "GND"))))
@@ -1100,12 +1129,12 @@ compiler start
 
 ;;;;;;;;tkbl_col
 (print "tkbl_col")
-(let ((s0) (p0 (vector 0 0)) (GND_ (concatenate 'string "GND_" *vpinlayer*)))
+(let ((s0) (p0 (vector 0 0)) (GND_ (concatenate 'string "GND_" vpinlayer)))
   (setf s0 (inst (vector "CORE_TKBL_SUB" #x0000 0.0d0 p0
 						 (list GND_)
 						 (list GND_))))
   (push (cell-3 "core_tkbl_sub" (list s0)) *srcunits*))
-(let ((s0) (s1) (s2) (s3) (p0 (vector 0 0)) (GND_ (concatenate 'string "GND_" *vpinlayer*)))
+(let ((s0) (s1) (s2) (s3) (p0 (vector 0 0)) (GND_ (concatenate 'string "GND_" vpinlayer)))
   (setf s0 (inst (vector "tkbl_array" #x0000 0.0d0 p0 (list) (list))))
   (setf s1 (inst-up-right s0 (vector "CORE_TKBL" #x0000 0.0d0 p0 (list) (list))))
   (setf s2 (inst-up-right s1 (vector "core_tkbl_sub" #x0000 0.0d0 p0
@@ -1207,11 +1236,11 @@ compiler start
 ;;;;;;;;wldrvall
 (print "wldrvall")
 (let ((s0) (s3) (p0 (vector 0 0)) (indexxpb) (indexxpc)
-		   (GND_ (concatenate 'string "GND_" *vpinlayer*))
-		   (VDD_ (concatenate 'string "VDD_" *vpinlayer*))
+		   (GND_ (concatenate 'string "GND_" vpinlayer))
+		   (VDD_ (concatenate 'string "VDD_" vpinlayer))
 		   (lst1 (list)) (lst2 (list)))
   (cond
-	((= 1 *charmode*) nil)
+	((= 1 charmode) nil)
 	((<= *num-of-xdecs* 1)
 	 (progn
 	   (dotimes (dimx *num-of-xdecs*)
@@ -1244,18 +1273,18 @@ compiler start
 (print "xypredec_itfctl")
 (defvar dec_pins (list))
 (let ((p0 (vector 0 0)) (ictl) (iypre) (ixyprecon) (ixprelow) (ixpremid) (ixprehigh) (icoldec) (iwl_tie)
-						(GND_ (concatenate 'string "GND_" *vpinlayer*))
-						(VDD_ (concatenate 'string "VDD_" *vpinlayer*))
-						(CLK_ (concatenate 'string "CLK_" *vpinlayer*))
-						(CEB_ (concatenate 'string "CEB_" *vpinlayer*))
-						(AD0_ (concatenate 'string "AD0_" *vpinlayer*))
-						(AD1_ (concatenate 'string "AD1_" *vpinlayer*))
-						(AD2_ (concatenate 'string "AD2_" *vpinlayer*))
-						(AD3_ (concatenate 'string "AD3_" *vpinlayer*))
-						(AD4_ (concatenate 'string "AD4_" *vpinlayer*))
-						(A0_ (concatenate 'string "A0_" *vpinlayer*))
-						(A1_ (concatenate 'string "A1_" *vpinlayer*))
-						(A2_ (concatenate 'string "A2_" *vpinlayer*))
+						(GND_ (concatenate 'string "GND_" vpinlayer))
+						(VDD_ (concatenate 'string "VDD_" vpinlayer))
+						(CLK_ (concatenate 'string "CLK_" vpinlayer))
+						(CEB_ (concatenate 'string "CEB_" vpinlayer))
+						(AD0_ (concatenate 'string "AD0_" vpinlayer))
+						(AD1_ (concatenate 'string "AD1_" vpinlayer))
+						(AD2_ (concatenate 'string "AD2_" vpinlayer))
+						(AD3_ (concatenate 'string "AD3_" vpinlayer))
+						(AD4_ (concatenate 'string "AD4_" vpinlayer))
+						(A0_ (concatenate 'string "A0_" vpinlayer))
+						(A1_ (concatenate 'string "A1_" vpinlayer))
+						(A2_ (concatenate 'string "A2_" vpinlayer))
 						(ictl.l1) (ictl.l2)
 						(iypre.l1) (iypre.l2)
 						(ixyprecon.l1) (ixyprecon.l2)
@@ -1270,17 +1299,13 @@ compiler start
   (setf iypre.l2 (list "GND" "VDD"))
   (setf ixyprecon.l1 (list GND_ VDD_))
   (setf ixyprecon.l2 (list "GND" "VDD"))
-  (setf ixprelow.l1 (list GND_ VDD_ "FIX_GND0" "FIX_GND1" "FIX_GND2" "FIX_GND3"))
-  (setf ixprelow.l2 (list "GND" "VDD"
-						  (concatenate 'string "ixprelow." "FIX_GND0")
-						  (concatenate 'string "ixprelow." "FIX_GND1")
-						  (concatenate 'string "ixprelow." "FIX_GND2")
-						  (concatenate 'string "ixpremid." "FIX_GND3")))
+  (setf ixprelow.l1 (list GND_ VDD_))
+  (setf ixprelow.l2 (list "GND" "VDD"))
   (setf ixpremid.l1 (list GND_ VDD_))
   (setf ixpremid.l2 (list "GND" "VDD"))
   (setf ixprehigh.l1 (list GND_ VDD_))
   (setf ixprehigh.l2 (list "GND" "VDD"))
-  (case *col-mux*
+  (case col-mux
 	(8 (progn
 		 (push AD0_ iypre.l1) (push "AD[0]" iypre.l2)
 		 (push AD1_ iypre.l1) (push "AD[1]" iypre.l2)
@@ -1421,7 +1446,7 @@ compiler start
 				(push A2_ ixprehigh.l1) (push "AD[13]" ixprehigh.l2)))))))
   (setf ictl (inst (vector *itfctlcell* #x0000 0.0d0 p0 ictl.l1 ictl.l2)))
   (setf iypre (inst-left-down ictl (vector *ypredeccell* #x0000 0.0d0 p0 iypre.l1 iypre.l2)))
-  (if (< *col-mux* 32)
+  (if (< col-mux 32)
 	(progn
 	  (setf ixyprecon (inst-left-down iypre (vector *xdec_ydec_con* #x0000 0.0d0 p0 ixyprecon.l1 ixyprecon.l2)))
 	  (setf ixprelow (inst-left-down ixyprecon (vector *Xpredeclow* #x0000 0.0d0 p0 ixprelow.l1 ixprelow.l2))))
@@ -1430,7 +1455,7 @@ compiler start
   (setf ixprehigh (inst-left-down ixpremid (vector *Xpredechigh* #x0000 0.0d0 p0 ixprehigh.l1 ixprehigh.l2)))
   (setf icoldec (inst-left-down ixprehigh (vector *col_dec_con* #x0000 0.0d0 p0 (list GND_ VDD_) (list "GND" "VDD"))))
   (setf iwl_tie (inst-up-left icoldec (vector *wl_tie* #x0000 0.0d0 p0 (list GND_ VDD_) (list "GND" "VDD"))))
-  (push (cell-3 "xypredec_itfctl" (if (< *col-mux* 32)
+  (push (cell-3 "xypredec_itfctl" (if (< col-mux 32)
 									(list ictl iypre ixyprecon ixprelow ixpremid ixprehigh icoldec iwl_tie)
 									(list ictl iypre ixprelow ixpremid ixprehigh icoldec iwl_tie))) *srcunits*))
 
@@ -1440,8 +1465,8 @@ compiler start
 ;;;;;;;;dmy_colmuxleft
 (print "dmy_colmuxleft")
 (let ((i1) (p0 (vector 0 0))
-		   (GND_ (concatenate 'string "GND_" *hpinlayer*))
-		   (VDD_ (concatenate 'string "VDD_" *hpinlayer*)))
+		   (GND_ (concatenate 'string "GND_" hpinlayer))
+		   (VDD_ (concatenate 'string "VDD_" hpinlayer)))
   (if (evenp *number-of-cols-l*)
 	(setf i1 (vector *dmy_colmux_even* #x0000 0.0d0 p0 (list GND_ VDD_) (list "GND" "VDD")))
 	(setf i1 (vector *dmy_colmux_odd* #x0000 0.0d0 p0 (list GND_ VDD_) (list "GND" "VDD"))))
@@ -1450,8 +1475,8 @@ compiler start
 ;;;;;;;;dmy_colmuxright
 (print "dmy_colmuxright")
 (let ((i1) (p0 (vector 0 0))
-		   (GND_ (concatenate 'string "GND_" *hpinlayer*))
-		   (VDD_ (concatenate 'string "VDD_" *hpinlayer*)))
+		   (GND_ (concatenate 'string "GND_" hpinlayer))
+		   (VDD_ (concatenate 'string "VDD_" hpinlayer)))
   (if (evenp *number-of-cols-r*)
 	(setf i1 (vector *dmy_colmux_even* #x4000 0.0d0 p0 (list GND_ VDD_) (list "GND" "VDD")))
 	(setf i1 (vector *dmy_colmux_odd* #x4000 0.0d0 p0 (list GND_ VDD_) (list "GND" "VDD"))))
@@ -1460,26 +1485,38 @@ compiler start
 ;;;;;;;;dio_ymux_left
 (print "dio_ymux_left")
 (let ((i1) (p0 (vector 0 0))
-		   (GND_ (concatenate 'string "GND_" *hpinlayer*))
-		   (VDD_ (concatenate 'string "VDD_" *hpinlayer*))
+		   (GND_ (concatenate 'string "GND_" hpinlayer))
+		   (VDD_ (concatenate 'string "VDD_" hpinlayer))
 		   (insts (list)))
   (dotimes (dimx (div1 *number-of-cols-l* 2))
 	(setf i1 (vector *ymuxsa2* #x0000 0.0d0 p0
 					 (list "VDD" "VDD_m1" "VDD_m2" "VDD_m3" "VDD_m4"
 						   "GND" "GND_m1" "GND_m3" "GND_m3" "GND_m4"
-						   "DO[0]_m1" "DO[0]_m2" "DO[0]_m3" "DO[0]_m4"
-						   "DO[1]_m1" "DO[1]_m2" "DO[1]_m3" "DO[1]_m4"
+						   "DO[0]_m1"
+						   "DO[0]_m2"
+						   "DO[0]_m3"
+						   "DO[0]_m4"
+						   "DO[1]_m1"
+						   "DO[1]_m2"
+						   "DO[1]_m3"
+						   "DO[1]_m4"
 						   "YPA[0]" "YPA[1]" "YPA[2]" "YPA[3]" "YPA[4]" "YPA[5]" "YPA[6]" "YPA[7]"
 						   "YPB[0]" "YPB[1]" "YPB[2]" "YPB[3]" "YPB[4]" "YPB[5]" "YPB[6]" "YPB[7]"
 						   "GTP" "SAE")
 					 (list "VDD" "VDD_m1" "VDD_m2" "VDD_m3" "VDD_m4"
 						   "GND" "GND_m1" "GND_m3" "GND_m3" "GND_m4"
-						   "DO[0]_m1" "DO[0]_m2" "DO[0]_m3" "DO[0]_m4"
-						   "DO[1]_m1" "DO[1]_m2" "DO[1]_m3" "DO[1]_m4"
+						   (concatenate 'string "DO[0]_m1" "_r" (itoa dimx))
+						   (concatenate 'string "DO[0]_m2" "_r" (itoa dimx))
+						   (concatenate 'string "DO[0]_m3" "_r" (itoa dimx))
+						   (concatenate 'string "DO[0]_m4" "_r" (itoa dimx))
+						   (concatenate 'string "DO[1]_m1" "_r" (itoa dimx))
+						   (concatenate 'string "DO[1]_m2" "_r" (itoa dimx))
+						   (concatenate 'string "DO[1]_m3" "_r" (itoa dimx))
+						   (concatenate 'string "DO[1]_m4" "_r" (itoa dimx))
 						   "YPA[0]" "YPA[1]" "YPA[2]" "YPA[3]" "YPA[4]" "YPA[5]" "YPA[6]" "YPA[7]"
 						   "YPB[0]" "YPB[1]" "YPB[2]" "YPB[3]" "YPB[4]" "YPB[5]" "YPB[6]" "YPB[7]"
 						   "GTP" "SAE")))
-	(push (inst i1) insts)
+	(push (inst i1) insts)gds-out
 	(setf p0 (vector+ p0 (vector (vinst-width i1) 0))))
   (push (cell-3 "dio_ymux_left" insts) *srcunits*))
 
@@ -1487,45 +1524,64 @@ compiler start
 (print "dio_ymuxcol_left")
 (if (evenp *number-of-cols-l*)
   (let ((s0) (s1) (p0 (vector 0 0))
-			 (GND_ (concatenate 'string "GND_" *vpinlayer*))
-			 (VDD_ (concatenate 'string "VDD_" *vpinlayer*))
-			 (DO[0]_ (concatenate 'string "DO[0]_" *vpinlayer*))
-			 (DO[1]_ (concatenate 'string "DO[1]_" *vpinlayer*)))
-	(setf s0 (inst (vector "dio_ymux_left" #x0000 0.0d0 p0
-						   (list GND_ VDD_ DO[0]_  DO[1]_)
-						   (list "GND" "VDD" "DO[0]" "DO[1]"))))
+			 (GND_ (concatenate 'string "GND_" vpinlayer))
+			 (VDD_ (concatenate 'string "VDD_" vpinlayer))
+			 (DO[0]_ (concatenate 'string "DO[0]_" vpinlayer))
+			 (DO[1]_ (concatenate 'string "DO[1]_" vpinlayer))
+			 (s0.sl (list)) (s0.tl (list))
+			 (index1))
+	(setf s0.sl (list GND_ VDD_))
+	(setf s0.tl (list "GND" "VDD"))
+	(dotimes (dimx *outputs-left*)
+	  (setf index1 (div1 dimx 2))
+	  (if (evenp dimx)
+		(push (concatenate 'string DO[0]_ "_r" (itoa index1)) s0.sl)
+		(push (concatenate 'string DO[1]_ "_r" (itoa index1)) s0.sl))
+	  (push (concatenate 'string "DO[" (itoa dimx) "]") s0.tl))
+	(setf s0 (inst (vector "dio_ymux_left" #x0000 0.0d0 p0 s0.sl s0.tl)))
 	(setf s1 (inst-left-down s0 (vector "dmy_colmuxleft" #x0000 0.0d0 p0 (list "GND" "VDD") (list "GND" "VDD"))))
 	(push (cell-3 "dio_ymuxcol_left" (list s0 s1)) *srcunits*))
   (if (= (div1 *number-of-cols-l* 2) 0)
 	(let ((i1) (i2) (p0 (vector 0 0))
-			   (GND_ (concatenate 'string "GND_" *vpinlayer*))
-			   (VDD_ (concatenate 'string "VDD_" *vpinlayer*))
-			   (DO_ (concatenate 'string "DO_" *vpinlayer*)))
+			   (GND_ (concatenate 'string "GND_" vpinlayer))
+			   (VDD_ (concatenate 'string "VDD_" vpinlayer))
+			   (DO_ (concatenate 'string "DO_" vpinlayer))
+			   (DO[0]_ (concatenate 'string "DO[0]_" vpinlayer))
+			   (DO[1]_ (concatenate 'string "DO[1]_" vpinlayer)))
 	  (setf i1 (inst (vector *ymuxsa1left* #x0000 0.0d0 p0
 							 (list GND_ VDD_ DO_)
 							 (list "GND" "VDD" "DO[0]"))))
 	  (setf i2 (inst-left-down i1 (vector "dmy_colmuxleft" #x0000 0.0d0 p0 (list "GND" "VDD") (list "GND" "VDD"))))
 	  (push (cell-3 "dio_ymuxcol_left" (list i1 i2)) *srcunits*))
 	(let ((s0) (s1) (s2) (p0 (vector 0 0))
-			   (GND_ (concatenate 'string "GND_" *vpinlayer*))
-			   (VDD_ (concatenate 'string "VDD_" *vpinlayer*))
-			   (DO_ (concatenate 'string "DO_" *vpinlayer*))
-			   (DO[0]_ (concatenate 'string "DO[0]_" *vpinlayer*))
-			   (DO[1]_ (concatenate 'string "DO[1]_" *vpinlayer*)))
-	  (setf s0 (inst (vector "dio_ymux_left" #x0000 0.0d0 p0
-							 (list  GND_ VDD_ DO[0]_  DO[1]_)
-							 (list "GND" "VDD" "DO[0]" "DO[1]"))))
+			   (GND_ (concatenate 'string "GND_" vpinlayer))
+			   (VDD_ (concatenate 'string "VDD_" vpinlayer))
+			   (DO_ (concatenate 'string "DO_" vpinlayer))
+			   (DO[0]_ (concatenate 'string "DO[0]_" vpinlayer))
+			   (DO[1]_ (concatenate 'string "DO[1]_" vpinlayer))
+			   (s0.sl (list)) (s0.tl (list))
+			   (index1) (cal))
+	  (setf s0.sl (list GND_ VDD_))
+	  (setf s0.tl (list "GND" "VDD"))
+	  (dotimes (dimx (1- *outputs-left*))
+		(setf index1 (div1 dimx 2))
+		(setf cal (+ dimx 1))
+		(if (evenp dimx)
+		  (push (concatenate 'string DO[0]_ "_r" (itoa index1)) s0.sl)
+		  (push (concatenate 'string DO[1]_ "_r" (itoa index1)) s0.sl))
+		(push (concatenate 'string "DO[" (itoa cal) "]") s0.tl))
+	  (setf s0 (inst (vector "dio_ymux_left" #x0000 0.0d0 p0 s0.sl s0.tl)))
 	  (setf s1 (inst-left-down s0 (vector *ymuxsa1left* #x0000 0.0d0 p0
-										  (list GND_ VDD_)
-										  (list "GND" "VDD"))))
+										  (list GND_ VDD_ DO_)
+										  (list "GND" "VDD" "DO[0]"))))
 	  (setf s2 (inst-left-down s1 (vector "dmy_colmuxleft" #x0000 0.0d0 p0 (list "GND" "VDD") (list "GND" "VDD"))))
 	  (push (cell-3 "dio_ymuxcol_left" (list s0 s1 s2)) *srcunits*))))
 
 ;;;;;;;;dio_ymux_right
 (print "dio_ymux_right")
 (let ((i1) (p0 (vector 0 0))
-		   (GND_ (concatenate 'string "GND_" *vpinlayer*))
-		   (VDD_ (concatenate 'string "VDD_" *vpinlayer*))
+		   (GND_ (concatenate 'string "GND_" vpinlayer))
+		   (VDD_ (concatenate 'string "VDD_" vpinlayer))
 		   (insts (list)))
   (dotimes (dimx (div1 *number-of-cols-r* 2))
 	(setf i1 (vector *ymuxsa2* #x0000 0.0d0 p0
@@ -1538,8 +1594,14 @@ compiler start
 						   "GTP" "SAE")
 					 (list "VDD" "VDD_m1" "VDD_m2" "VDD_m3" "VDD_m4"
 						   "GND" "GND_m1" "GND_m3" "GND_m3" "GND_m4"
-						   "DO[0]_m1" "DO[0]_m2" "DO[0]_m3" "DO[0]_m4"
-						   "DO[1]_m1" "DO[1]_m2" "DO[1]_m3" "DO[1]_m4"
+						   (concatenate 'string "DO[0]_m1" "_r" (itoa dimx))
+						   (concatenate 'string "DO[0]_m2" "_r" (itoa dimx))
+						   (concatenate 'string "DO[0]_m3" "_r" (itoa dimx))
+						   (concatenate 'string "DO[0]_m4" "_r" (itoa dimx))
+						   (concatenate 'string "DO[1]_m1" "_r" (itoa dimx))
+						   (concatenate 'string "DO[1]_m2" "_r" (itoa dimx))
+						   (concatenate 'string "DO[1]_m3" "_r" (itoa dimx))
+						   (concatenate 'string "DO[1]_m4" "_r" (itoa dimx))
 						   "YPA[0]" "YPA[1]" "YPA[2]" "YPA[3]" "YPA[4]" "YPA[5]" "YPA[6]" "YPA[7]"
 						   "YPB[0]" "YPB[1]" "YPB[2]" "YPB[3]" "YPB[4]" "YPB[5]" "YPB[6]" "YPB[7]"
 						   "GTP" "SAE")))
@@ -1551,34 +1613,52 @@ compiler start
 (print "dio_ymuxcol_right")
 (if (evenp *number-of-cols-r*)
   (let ((s0) (s1) (p0 (vector 0 0))
-			 (GND_ (concatenate 'string "GND_" *vpinlayer*))
-			 (VDD_ (concatenate 'string "VDD_" *vpinlayer*))
-			 (DO[0]_ (concatenate 'string "DO[0]_" *vpinlayer*))
-			 (DO[1]_ (concatenate 'string "DO[1]_" *vpinlayer*)))
-	(setf s0 (inst (vector "dio_ymux_right" #x0000 0.0d0 p0
-						   (list GND_ VDD_ DO[0]_  DO[1]_)
-						   (list "GND" "VDD" "DO[0]" "DO[1]"))))
+			 (GND_ (concatenate 'string "GND_" vpinlayer))
+			 (VDD_ (concatenate 'string "VDD_" vpinlayer))
+			 (DO[0]_ (concatenate 'string "DO[0]_" vpinlayer))
+			 (DO[1]_ (concatenate 'string "DO[1]_" vpinlayer))
+			 (s0.sl (list)) (s0.tl (list))
+			 (index1) (cal))
+	(setf s0.sl (list GND_ VDD_))
+	(setf s0.tl (list "GND" "VDD"))
+	(dotimes (dimx *outputs-right*)
+	  (setf index1 (div1 dimx 2))
+	  (setf cal (+ dimx *outputs-left*))
+	  (if (evenp dimx)
+		(push (concatenate 'string DO[0]_ "_r" (itoa index1)) s0.sl)
+		(push (concatenate 'string DO[1]_ "_r" (itoa index1)) s0.sl))
+	  (push (concatenate 'string "DO[" (itoa cal) "]") s0.tl))
+	(setf s0 (inst (vector "dio_ymux_right" #x0000 0.0d0 p0 s0.sl s0.tl)))
 	(setf s1 (inst-right-down s0 (vector "dmy_colmuxright" #x0000 0.0d0 p0 (list "GND" "VDD") (list "GND" "VDD"))))
 	(push (cell-3 "dio_ymuxcol_right" (list s0 s1)) *srcunits*))
   (if (= (div1 *number-of-cols-r* 2) 0)
 	(let ((i1) (i2) (p0 (vector 0 0))
-			   (GND_ (concatenate 'string "GND_" *vpinlayer*))
-			   (VDD_ (concatenate 'string "VDD_" *vpinlayer*))
-			   (DO_ (concatenate 'string "DO_" *vpinlayer*)))
+			   (GND_ (concatenate 'string "GND_" vpinlayer))
+			   (VDD_ (concatenate 'string "VDD_" vpinlayer))
+			   (DO_ (concatenate 'string "DO_" vpinlayer)))
 	  (setf i1 (inst (vector *ymuxsa1right* #x0000 0.0d0 p0
 							 (list GND_ VDD_ DO_)
 							 (list "GND" "VDD" "DO[0]"))))
 	  (setf i2 (inst-right-down i1 (vector "dmy_colmuxright" #x0000 0.0d0 p0 (list "GND" "VDD") (list "GND" "VDD"))))
 	  (push (cell-3 "dio_ymuxcol_right" (list i1 i2)) *srcunits*))
 	(let ((s0) (s1) (s2) (p0 (vector 0 0))
-			   (GND_ (concatenate 'string "GND_" *vpinlayer*))
-			   (VDD_ (concatenate 'string "VDD_" *vpinlayer*))
-			   (DO_ (concatenate 'string "DO_" *vpinlayer*))
-			   (DO[0]_ (concatenate 'string "DO[0]_" *vpinlayer*))
-			   (DO[1]_ (concatenate 'string "DO[1]_" *vpinlayer*)))
-	  (setf s0 (inst (vector "dio_ymux_right" #x0000 0.0d0 p0
-							 (list  GND_ VDD_ DO[0]_  DO[1]_)
-							 (list "GND" "VDD" "DO[0]" "DO[1]"))))
+			   (GND_ (concatenate 'string "GND_" vpinlayer))
+			   (VDD_ (concatenate 'string "VDD_" vpinlayer))
+			   (DO_ (concatenate 'string "DO_" vpinlayer))
+			   (DO[0]_ (concatenate 'string "DO[0]_" vpinlayer))
+			   (DO[1]_ (concatenate 'string "DO[1]_" vpinlayer))
+			   (s0.sl (list)) (s0.tl (list))
+			   (index1) (cal))
+	  (setf s0.sl (list GND_ VDD_))
+	  (setf s0.tl (list "GND" "VDD"))
+	  (dotimes (dimx (1- *outputs-right*))
+		(setf index1 (div1 dimx 2))
+		(setf cal (+ dimx *outputs-left*))
+		(if (evenp dimx)
+		  (push (concatenate 'string DO[0]_ "_r" (itoa index1)) s0.sl)
+		  (push (concatenate 'string DO[1]_ "_r" (itoa index1)) s0.sl))
+		(push (concatenate 'string "DO[" (itoa cal) "]") s0.tl))
+	  (setf s0 (inst (vector "dio_ymux_right" #x0000 0.0d0 p0 s0.sl s0.tl)))
 	  (setf s1 (inst-right-down s0 (vector *ymuxsa1right* #x0000 0.0d0 p0
 										  (list GND_ VDD_)
 										  (list "GND" "VDD"))))
@@ -1589,33 +1669,41 @@ compiler start
 (print "macro")
 (let ((i0) (i1) (i2) (i3) (i4) (i5) (i6) (p0 (vector 0 0)))
   (setf i0 (inst (vector "dio_ymuxcol_left" #x0000 0.0d0 p0
-						 (list)
-						 (list))))
+						 (list "GND" "VDD" "DO[0]" "DO[1]" "DO[2]" "DO[3]" "DO[4]" "DO[5]" "DO[6]" "DO[7]" "DO[8]" "DO[9]")
+						 (list "GND" "VDD" "DO[0]" "DO[1]" "DO[2]" "DO[3]" "DO[4]" "DO[5]" "DO[6]" "DO[7]" "DO[8]" "DO[9]"))))
   (setf i1 (inst-up-right i0 (vector "core_left" #x0000 0.0d0 p0
-						 (list)
-						 (list))))
+						 (list "GND")
+						 (list "GND"))))
   (setf i2 (inst-right-down i0 (vector "xypredec_itfctl" #x0000 0.0d0 p0
-						 (list)
-						 (list))))
+						 (list "GND" "VDD" "CEB" "CLK"
+							   "AD[0]" "AD[1]" "AD[2]" "AD[3]" "AD[4]" "AD[5]" "AD[6]"
+							   "AD[7]" "AD[8]" "AD[9]" "AD[10]" "AD[11]" "AD[12]""AD[13]")
+						 (list "GND" "VDD" "CEB" "CLK"
+							   "AD[0]" "AD[1]" "AD[2]" "AD[3]" "AD[4]" "AD[5]" "AD[6]"
+							   "AD[7]" "AD[8]" "AD[9]" "AD[10]" "AD[11]" "AD[12]""AD[13]"))))
   (setf i3 (inst-up-left i2 (vector "wldrvall" #x0000 0.0d0 p0
-						 (list)
-						 (list))))
+						 (list "GND" "VDD")
+						 (list "GND" "VDD"))))
   (setf i4 (inst-right-down i2 (vector "dio_ymuxcol_right" #x0000 0.0d0 p0
-						 (list)
-						 (list))))
+						 (list "GND" "VDD" "DO[0]" "DO[1]" "DO[2]" "DO[3]" "DO[4]" "DO[5]" "DO[6]" "DO[7]" "DO[8]" "DO[9]")
+						 (list "GND" "VDD" "DO[0]" "DO[1]" "DO[2]" "DO[3]" "DO[4]" "DO[5]" "DO[6]" "DO[7]" "DO[8]" "DO[9]"))))
   (setf i5 (inst-up-left i4 (vector "core_right" #x0000 0.0d0 p0
-						 (list)
-						 (list))))
+						 (list "GND")
+						 (list "GND"))))
   (setf i6 (inst-left-down i5 (vector "tkbl_col" #x0000 0.0d0 p0
-						 (list)
-						 (list))))
+						 (list "GND")
+						 (list "GND"))))
   (push (cell-3 "macro" (list i0 i1 i2 i3 i4 i5 i6)) *srcunits*))
 
+;;;;;;;;withdraw top
+(format t "
+withdraw top : ~a
+" top-name)
+(defvar outlib (lib outlib-name (withdraw top-name)))
 ;;;;;;;;dump gds
 (format t "
-dump gds
-")
-(defvar outlib (lib *outlib-name* (withdraw "macro")))
-(sgk-wt-gds *gds-out* outlib)
+dump gds ~a
+" gds-out)
+(sgk-wt-gds gds-out outlib)
 ))
-(quit)
+)

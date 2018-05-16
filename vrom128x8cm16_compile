@@ -1,0 +1,13 @@
+#!/bin/bash
+sbcl --no-userinit --no-sysinit --disable-debugger --eval '(progn  (load "vrom_compile.fasl") 
+(vrom-compile 
+:leaf_cell "./lc1.gds" 
+:code-file "./VROM128X8_CM16.cod" 
+:word-depth 128 :word-length 8 :col-mux 16 
+:charmode 0 
+:hpinlayer "m2" :vpinlayer "m3" 
+:anchor_layer_number 60 
+:outlib-name "VROM128X8_CM16" 
+:top-name "macro"
+:gds-out "./VROM128X8_CM16.gds" 
+) (quit))'
